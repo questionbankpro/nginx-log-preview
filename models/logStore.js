@@ -106,11 +106,24 @@ function parseLogDate(dateStr) {
 
 async function loadLogs(logDir) {
   const targetDir = fs.existsSync(logDir) ? logDir : path.join(__dirname, '..');
+  
+  if (!fs.existsSync(targetDir)) {
+    console.log(`Directory ${targetDir} does not exist. Creating it...`);
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
   const files = fs.readdirSync(targetDir);
   const logFiles = files.filter(f => f.startsWith('access.log') || f.startsWith('error.log'));
 
+  if (logFiles.length === 0) {
+    console.log(`⚠️ No access.log or error.log files found in ${targetDir}. Please add your Nginx log files to this folder.`);
+    logsDB.length = 0;
+    return;
+  }
+
   console.log(`Loading ${logFiles.length} log files from ${targetDir}...`);
   logsDB.length = 0; // reset
+
 
   for (const file of logFiles) {
     const filePath = path.join(targetDir, file);

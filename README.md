@@ -67,21 +67,27 @@ nginx/
 
 ## 🛠️ Quick Start with Docker Compose
 
+### 1. Adding Your Nginx Log Files
+Since raw log files contain sensitive server IP data, they are excluded from this Git repository (`.gitignore`).
 
-### Prerequisites
-- [Docker](https://www.docker.com/) & Docker Compose installed on your system.
+Before starting the container, place your Nginx log files inside the `./logs/` folder:
+- **Supported Access Log formats**: `access.log`, `access.log.1`, `access.log.2.gz`, etc.
+- **Supported Error Log formats**: `error.log`, `error.log.1`, `error.log.2.gz`, etc.
 
-### Running the Application
+> 💡 *If the `./logs/` folder is empty, the application will boot up safely with 0 records and prompt you in the server terminal logs to drop your files into `./logs/`.*
 
-1. Place your Nginx log files (`access.log*`, `error.log*`, `*.gz`) inside the `./logs` directory.
-2. Launch the stack:
-   ```bash
-   docker-compose up -d --build
-   ```
-3. Open your browser and navigate to:
-   **[http://localhost:3080](http://localhost:3080)**
+### 2. Running the Stack
+
+Launch the application:
+```bash
+docker-compose up -d --build
+```
+
+Open your browser and navigate to:
+**[http://localhost:3080](http://localhost:3080)**
 
 ---
+
 
 ## 📡 REST API Reference
 
