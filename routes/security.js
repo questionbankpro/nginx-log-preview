@@ -47,12 +47,45 @@ router.get('/threats', (req, res) => {
     sample_paths: Array.from(t.sample_paths)
   })).filter(t => t.count > 0);
 
+  // Automated Actionable Security Recommendations
+  const recommendations = [];
+  if (threatsMap['Environment File Probe'].count > 0) {
+    recommendations.push({
+      issue: 'Environment File Probe (.env)',
+      severity: 'HIGH',
+      recommendation: 'Add location block in Nginx: `location ~ /\\.env { deny all; return 404; }`'
+    });
+  }
+  if (threatsMap['Directory Traversal (LFI)'].count > 0) {
+    recommendations.push({
+      issue: 'Directory Traversal Attempt (../)',
+      severity: 'CRITICAL',
+      recommendation: 'Ensure your backend application sanitizes file inputs and prevents path normalization exploits.'
+    });
+  }
+  if (threatsMap['Git Repository Leak Scan'].count > 0) {
+    recommendations.push({
+      issue: 'Git Repo Leak Scan (.git)',
+      severity: 'HIGH',
+      recommendation: 'Block .git directory in Nginx: `location ~ /\\.git { deny all; return 404; }`'
+    });
+  }
+  if (threatsMap['WordPress Admin Probe'].count > 0) {
+    recommendations.push({
+      issue: 'WordPress Admin Scanner Probe',
+      severity: 'MEDIUM',
+      recommendation: 'If not running WordPress, return immediate 404 or 444 (No Response) for `/wp-admin` & `/xmlrpc.php`.'
+    });
+  }
+
   res.json({
     total_threat_events: suspiciousLogs.length,
     threat_categories: threatSummary,
+    security_recommendations: recommendations,
     recent_threat_events: suspiciousLogs.slice(-100).reverse()
   });
 });
+
 
 // 2. High Frequency IP Spike Detector (Brute-Force / Rate Limit)
 router.get('/spikes', (req, res) => {

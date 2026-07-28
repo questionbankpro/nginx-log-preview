@@ -229,6 +229,7 @@ async function loadSecurityTab() {
 
     const catContainer = document.getElementById('threat-categories-list');
     catContainer.innerHTML = '';
+    
     (threatData.threat_categories || []).forEach(tc => {
       const item = document.createElement('div');
       item.className = 'd-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary-subtle';
@@ -239,8 +240,24 @@ async function loadSecurityTab() {
       catContainer.appendChild(item);
     });
 
+    // Render Recommendations
+    if (threatData.security_recommendations && threatData.security_recommendations.length > 0) {
+      const recHeader = document.createElement('div');
+      recHeader.className = 'mt-3 mb-1 fw-semibold text-warning small';
+      recHeader.innerText = '💡 Recommended Fixes:';
+      catContainer.appendChild(recHeader);
+
+      threatData.security_recommendations.forEach(rec => {
+        const recItem = document.createElement('div');
+        recItem.className = 'p-2 rounded bg-opacity-10 bg-warning text-warning border border-warning-subtle small';
+        recItem.innerHTML = `<strong>[${rec.severity}] ${rec.issue}:</strong> ${rec.recommendation}`;
+        catContainer.appendChild(recItem);
+      });
+    }
+
     document.getElementById('snippet-nginx-deny').value = rulesData.nginx_deny_snippet || '';
     document.getElementById('snippet-fail2ban').value = rulesData.fail2ban_filter_snippet || '';
+
 
     const tbody = document.getElementById('threats-table-body');
     tbody.innerHTML = '';

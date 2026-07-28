@@ -96,6 +96,19 @@ Open your browser and navigate to:
 
 ---
 
+## 🚀 Live Server Production Deployment (`live-server/`)
+
+To deploy this analytics stack on your live production Linux server (Ubuntu/Debian/RHEL) connected directly to your server's live `/var/log/nginx` directory:
+
+1. **Upload repo to server and run 1-click deployment**:
+   ```bash
+   cd live-server
+   chmod +x deploy.sh
+   sudo ./deploy.sh
+   ```
+2. See the full **[live-server/README.md](file:///Users/ankit/Downloads/nginx/live-server/README.md)** for systemd background service setup, Nginx reverse proxy configs, and password protection steps.
+
+---
 
 ## 📡 REST API Reference
 
