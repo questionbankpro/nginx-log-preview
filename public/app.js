@@ -542,30 +542,64 @@ async function loadBotsTab() {
   }
 }
 
+let googleActiveFilter = 'all';
+
 async function loadGooglebotTab() {
   try {
     const q = getGlobalDateQueryParams();
     const res = await fetch(`/api/analytics/googlebot?${q}`);
     const data = await res.json();
 
-    const tbody = document.getElementById('google-failed-table-body');
-    tbody.innerHTML = '';
-
-    data.recent_failed_crawls.forEach(l => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="white-space: nowrap;">${l.timestamp}</td>
-        <td><strong>${l.ip}</strong></td>
-        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(l.path)}"><code>${escapeHtml(l.path)}</code></td>
-        <td><span class="badge badge-danger">${l.status}</span></td>
-        <td style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(l.raw_message)}">${escapeHtml(l.raw_message)}</td>
-      `;
-      tbody.appendChild(tr);
+    const filterBtns = document.querySelectorAll('#google-bot-filter-group button');
+    filterBtns.forEach(btn => {
+      btn.onclick = () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        googleActiveFilter = btn.getAttribute('data-google-filter');
+        renderGooglebotTable(data.recent_failed_crawls || []);
+      };
     });
+
+    renderGooglebotTable(data.recent_failed_crawls || []);
   } catch (err) {
     console.error('Error loading Googlebot tab', err);
   }
 }
+
+function renderGooglebotTable(crawls) {
+  const tbody = document.getElementById('google-failed-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  let filtered = crawls;
+  if (googleActiveFilter === 'real') {
+    filtered = crawls.filter(l => l.ip.startsWith('66.249.'));
+  } else if (googleActiveFilter === 'fake') {
+    filtered = crawls.filter(l => !l.ip.startsWith('66.249.'));
+  }
+
+  const badge = document.getElementById('google-fail-badge');
+  if (badge) badge.innerText = `${filtered.length} Failed Crawls`;
+
+  filtered.forEach(l => {
+    const isReal = l.ip.startsWith('66.249.');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space: nowrap;">${l.timestamp}</td>
+      <td><strong>${l.ip}</strong></td>
+      <td>
+        <span class="badge ${isReal ? 'bg-success' : 'bg-danger'}">
+          ${isReal ? '✅ Genuine Googlebot' : '🚨 Fake Scanner Bot'}
+        </span>
+      </td>
+      <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(l.path)}"><code>${escapeHtml(l.path)}</code></td>
+      <td><span class="badge badge-danger">${l.status}</span></td>
+      <td style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(l.raw_message)}">${escapeHtml(l.raw_message)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
 
 async function loadIPAnalytics() {
   try {
