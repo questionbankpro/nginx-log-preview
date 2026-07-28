@@ -25,109 +25,129 @@
       </div>
       <nav class="nav-menu">
 
-        <button class="nav-btn active" data-tab="overview">
-          <span class="icon">📊</span> Overview
+        <button class="nav-btn active text-nowrap" data-tab="overview">
+          <span class="icon me-1">📊</span> <span class="nav-text">Overview</span>
         </button>
-        <button class="nav-btn" data-tab="crawlers">
-          <span class="icon">🤖</span> Bot & Crawler Traffic
+        <button class="nav-btn text-nowrap" data-tab="crawlers">
+          <span class="icon me-1">🤖</span> <span class="nav-text">Bot & Crawler Traffic</span>
         </button>
-        <button class="nav-btn" data-tab="googlebot">
-          <span class="icon">🔍</span> Googlebot Failures
+        <button class="nav-btn text-nowrap" data-tab="googlebot">
+          <span class="icon me-1">🔍</span> <span class="nav-text">Googlebot Failures</span>
         </button>
-        <button class="nav-btn" data-tab="ip-analytics">
-          <span class="icon">🌐</span> IP Aggregation
+        <button class="nav-btn text-nowrap" data-tab="ip-analytics">
+          <span class="icon me-1">🌐</span> <span class="nav-text">IP Aggregation</span>
         </button>
-        <button class="nav-btn" data-tab="status-matrix">
-          <span class="icon">📈</span> Status Code Matrix
+        <button class="nav-btn text-nowrap" data-tab="status-matrix">
+          <span class="icon me-1">📈</span> <span class="nav-text">Status Code Matrix</span>
         </button>
-        <button class="nav-btn" data-tab="access-denied">
-          <span class="icon">🛡️</span> Access Denied (403/Scans)
+        <button class="nav-btn text-nowrap" data-tab="access-denied">
+          <span class="icon me-1">🛡️</span> <span class="nav-text">Access Denied (403/Scans)</span>
         </button>
-        <button class="nav-btn" data-tab="ip-audit">
-          <span class="icon">🔎</span> IP Deep-Dive Lookup
+        <button class="nav-btn text-nowrap" data-tab="ip-audit">
+          <span class="icon me-1">🔎</span> <span class="nav-text">IP Deep-Dive Lookup</span>
         </button>
-        <button class="nav-btn" data-tab="log-viewer">
-          <span class="icon">📋</span> Raw Log Search
+        <button class="nav-btn text-nowrap" data-tab="log-viewer">
+          <span class="icon me-1">📋</span> <span class="nav-text">Raw Log Search</span>
         </button>
+
+
 
       </nav>
     </aside>
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Global Date & Status Range Filter Bar -->
-      <div class="global-filter-bar">
-        <div class="filter-group">
-          <label for="global-start-date">📅 Start Date:</label>
-          <input type="datetime-local" id="global-start-date" class="date-input">
-        </div>
-        <div class="filter-group">
-          <label for="global-end-date">📅 End Date:</label>
-          <input type="datetime-local" id="global-end-date" class="date-input">
-        </div>
+      <!-- Global Date & Status Range Filter Bar (Bootstrap Flex & Gap Utilities) -->
+      <div class="card p-3 mb-4 border-secondary-subtle">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <label for="global-start-date" class="form-label mb-0 fw-semibold">📅 Start:</label>
+            <input type="datetime-local" id="global-start-date" class="form-control form-control-sm w-auto">
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <label for="global-end-date" class="form-label mb-0 fw-semibold">📅 End:</label>
+            <input type="datetime-local" id="global-end-date" class="form-control form-control-sm w-auto">
+          </div>
 
-        <div class="filter-group checkboxes-group">
-          <span style="font-weight: 600; color: var(--text-main);">Statuses:</span>
-          <label class="cb-label"><input type="checkbox" class="status-cb" value="2xx" checked> 2xx OK</label>
-          <label class="cb-label"><input type="checkbox" class="status-cb" value="3xx" checked> 3xx Redirect</label>
-          <label class="cb-label"><input type="checkbox" class="status-cb" value="403" checked> 403 Forbidden</label>
-          <label class="cb-label"><input type="checkbox" class="status-cb" value="404" checked> 404 Not Found</label>
-          <label class="cb-label"><input type="checkbox" class="status-cb" value="5xx" checked> 5xx Error</label>
-        </div>
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">Statuses:</span>
+            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="2xx" id="cb2" checked><label class="form-check-label" for="cb2">2xx</label></div>
+            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="3xx" id="cb3" checked><label class="form-check-label" for="cb3">3xx</label></div>
+            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="403" id="cb403" checked><label class="form-check-label text-warning" for="cb403">403</label></div>
+            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="404" id="cb404" checked><label class="form-check-label text-warning" for="cb404">404</label></div>
+            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="5xx" id="cb5" checked><label class="form-check-label text-danger" for="cb5">5xx</label></div>
+          </div>
 
-        <button id="btn-apply-global-date" class="btn btn-primary btn-sm">Apply Global Filter</button>
-        <button id="btn-clear-global-date" class="btn btn-secondary btn-sm">Clear Filter</button>
-        <button id="btn-copy-api-url" class="btn btn-secondary btn-sm" style="margin-left: auto;">📋 Copy API URL</button>
+          <div class="d-flex gap-2 ms-lg-auto">
+            <button id="btn-apply-global-date" class="btn btn-primary btn-sm">Apply Filter</button>
+            <button id="btn-clear-global-date" class="btn btn-outline-secondary btn-sm">Clear</button>
+            <button id="btn-copy-api-url" class="btn btn-outline-info btn-sm">📋 Copy API URL</button>
+          </div>
+        </div>
       </div>
 
-
-
-      <!-- Top Summary Metrics Bar -->
-      <header class="metrics-bar">
-
-        <div class="metric-card">
-          <div class="metric-title">Total Log Entries</div>
-          <div class="metric-value" id="stat-total-logs">-</div>
+      <!-- Top Summary Metrics Grid (Bootstrap 5 Row & Cols) -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-secondary-subtle">
+            <div class="text-secondary small fw-medium">Total Log Entries</div>
+            <div class="fs-4 fw-bold mt-1" id="stat-total-logs">-</div>
+          </div>
         </div>
-        <div class="metric-card">
-          <div class="metric-title">Unique Client IPs</div>
-          <div class="metric-value" id="stat-unique-ips">-</div>
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-secondary-subtle">
+            <div class="text-secondary small fw-medium">Unique Client IPs</div>
+            <div class="fs-4 fw-bold mt-1" id="stat-unique-ips">-</div>
+          </div>
         </div>
-        <div class="metric-card info">
-          <div class="metric-title">Googlebot Hits</div>
-          <div class="metric-value" id="stat-googlebot">-</div>
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-info-subtle bg-info-subtle bg-opacity-10">
+            <div class="text-info small fw-medium">Googlebot Hits</div>
+            <div class="fs-4 fw-bold mt-1 text-info" id="stat-googlebot">-</div>
+          </div>
         </div>
-        <div class="metric-card danger">
-          <div class="metric-title">Googlebot Failed Crawls</div>
-          <div class="metric-value" id="stat-googlebot-failed">-</div>
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-danger-subtle bg-danger-subtle bg-opacity-10">
+            <div class="text-danger small fw-medium">Googlebot Failed</div>
+            <div class="fs-4 fw-bold mt-1 text-danger" id="stat-googlebot-failed">-</div>
+          </div>
         </div>
-        <div class="metric-card warning">
-          <div class="metric-title">Access Denied / 403s</div>
-          <div class="metric-value" id="stat-403">-</div>
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-warning-subtle bg-warning-subtle bg-opacity-10">
+            <div class="text-warning small fw-medium">Access Denied / 403s</div>
+            <div class="fs-4 fw-bold mt-1 text-warning" id="stat-403">-</div>
+          </div>
         </div>
-        <div class="metric-card">
-          <div class="metric-title">Total Bandwidth</div>
-          <div class="metric-value" id="stat-bandwidth">-</div>
+        <div class="col-12 col-sm-6 col-xl-2">
+          <div class="card p-3 h-100 text-center border-secondary-subtle">
+            <div class="text-secondary small fw-medium">Total Bandwidth</div>
+            <div class="fs-4 fw-bold mt-1" id="stat-bandwidth">-</div>
+          </div>
         </div>
-      </header>
+      </div>
 
       <!-- TAB 1: OVERVIEW -->
       <section id="tab-overview" class="tab-content active">
-        <div class="grid-2">
-          <div class="card">
-            <h3>HTTP Status Code Distribution</h3>
-            <div class="chart-container">
-              <canvas id="statusChart"></canvas>
+        <div class="row g-4">
+          <div class="col-12 col-lg-6">
+            <div class="card p-3 h-100 border-secondary-subtle">
+              <h5 class="card-title mb-3">HTTP Status Code Distribution</h5>
+              <div class="chart-container" style="position: relative; height: 320px;">
+                <canvas id="statusChart"></canvas>
+              </div>
             </div>
           </div>
-          <div class="card">
-            <h3>Bot vs Human / Tool Traffic Breakdown</h3>
-            <div class="chart-container">
-              <canvas id="botChart"></canvas>
+          <div class="col-12 col-lg-6">
+            <div class="card p-3 h-100 border-secondary-subtle">
+              <h5 class="card-title mb-3">Bot vs Human / Tool Traffic</h5>
+              <div class="chart-container" style="position: relative; height: 320px;">
+                <canvas id="botChart"></canvas>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
 
       <!-- TAB 2: CRAWLER & BOT TRAFFIC -->
       <section id="tab-crawlers" class="tab-content">
