@@ -47,9 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setupTabNavigation();
   setupGlobalDateFilter();
+  setupTableSorting();
 
   // Collapsible Sidebar Handler (Desktop & Mobile)
   const sidebar = document.querySelector('.sidebar');
+
   const toggleBtn = document.getElementById('btn-toggle-sidebar');
   const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
 
@@ -722,3 +724,44 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+function setupTableSorting() {
+  document.addEventListener('click', (e) => {
+    const th = e.target.closest('th');
+    if (!th) return;
+
+    const table = th.closest('table');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const headers = Array.from(th.parentNode.children);
+    const columnIndex = headers.indexOf(th);
+    const currentDirection = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+
+    headers.forEach(header => header.classList.remove('sort-asc', 'sort-desc', 'sortable'));
+    headers.forEach(header => header.classList.add('sortable'));
+    th.classList.add(`sort-${currentDirection}`);
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((rowA, rowB) => {
+      const cellA = rowA.children[columnIndex] ? rowA.children[columnIndex].innerText.trim() : '';
+      const cellB = rowB.children[columnIndex] ? rowB.children[columnIndex].innerText.trim() : '';
+
+      const numA = parseFloat(cellA.replace(/,/g, '').replace(/%/g, ''));
+      const numB = parseFloat(cellB.replace(/,/g, '').replace(/%/g, ''));
+
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return currentDirection === 'asc' ? numA - numB : numB - numA;
+      }
+
+      return currentDirection === 'asc' 
+        ? cellA.localeCompare(cellB, undefined, { numeric: true, sensitivity: 'base' })
+        : cellB.localeCompare(cellA, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+  });
+}
+

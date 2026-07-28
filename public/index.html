@@ -78,22 +78,35 @@
 
       <!-- TAB 3: GOOGLEBOT FAILS & CRAWL ANALYTICS -->
       <section id="tab-googlebot" class="tab-content">
-        <div class="card border-warning">
-          <div class="card-header">
-            <h3>🔍 Googlebot Crawl Failures & Aggregated Paths</h3>
-            <span class="badge badge-warning" id="google-fail-badge">0 Failed Crawls</span>
+        <div class="card border-warning p-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="text-warning mb-1">🔍 Googlebot Crawl Failures & Verification</h4>
+              <p class="subtitle mb-0 text-secondary">Isolate genuine Googlebot crawls (`66.249.x.x`) from fake scanner bots spoofing Googlebot User-Agent strings.</p>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <!-- Fake vs Real Googlebot Filter Buttons -->
+              <div class="btn-group btn-group-sm" role="group" id="google-bot-filter-group">
+                <button class="btn btn-outline-primary active" data-google-filter="all">All Crawls</button>
+                <button class="btn btn-outline-success" data-google-filter="real">✅ Genuine Googlebot (66.249.x.x)</button>
+                <button class="btn btn-outline-danger" data-google-filter="fake">🚨 Fake Scanner Bots</button>
+              </div>
+
+              <span class="badge badge-warning" id="google-fail-badge">0 Failed Crawls</span>
+            </div>
           </div>
-          <p class="subtitle">Detailed breakdown of requests originated from Googlebot user-agents that returned error status codes (4xx/5xx).</p>
-          
-          <h4 style="margin-top: 1rem;">Recent Googlebot Failed Crawl Attempts</h4>
+
+          <h5 class="mt-2 mb-3">Googlebot Failed Crawl Events</h5>
           <div class="table-wrapper">
             <table class="data-table code-font">
               <thead>
                 <tr>
                   <th>Timestamp</th>
                   <th>Googlebot IP</th>
+                  <th>Verification</th>
                   <th>Target Path</th>
-                  <th>Status Code</th>
+                  <th>Status</th>
                   <th>Raw Log Event</th>
                 </tr>
               </thead>
@@ -104,6 +117,7 @@
           </div>
         </div>
       </section>
+
 
       <!-- TAB: THREAT SCANS & FAIL2BAN RULES -->
       <section id="tab-security" class="tab-content">
