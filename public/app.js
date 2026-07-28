@@ -593,7 +593,13 @@ async function loadGooglebotTab() {
     const res = await fetch(`/api/analytics/googlebot?${q}`);
     const data = await res.json();
 
+    const redirectBox = document.getElementById('snippet-googlebot-redirects');
+    if (redirectBox) {
+      redirectBox.value = data.generated_nginx_redirects_snippet || '# No 404 Googlebot crawl errors detected';
+    }
+
     const filterBtns = document.querySelectorAll('#google-bot-filter-group button');
+
     filterBtns.forEach(btn => {
       btn.onclick = () => {
         filterBtns.forEach(b => b.classList.remove('active'));

@@ -97,7 +97,16 @@
             </div>
           </div>
 
+          <div class="mb-4 p-3 rounded bg-dark border border-warning-subtle">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-warning mb-0 fw-semibold">🔄 Auto-Generated Nginx 301 SEO Redirect Rules (Fixes Googlebot 404s)</h6>
+              <button class="btn btn-outline-warning btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('snippet-googlebot-redirects').value)">📋 Copy 301 Rules</button>
+            </div>
+            <textarea id="snippet-googlebot-redirects" class="form-control code-font bg-dark text-light" rows="4" readonly placeholder="Loading generated 301 redirect map..."></textarea>
+          </div>
+
           <h5 class="mt-2 mb-3">Googlebot Failed Crawl Events</h5>
+
           <div class="table-wrapper">
             <table class="data-table code-font">
               <thead>

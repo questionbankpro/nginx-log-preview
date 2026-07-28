@@ -59,13 +59,46 @@ router.get('/googlebot', (req, res) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 30);
 
+  // Generate 301 Permanent Redirect Nginx map snippet ONLY for Genuine Googlebot (66.249.x.x) 404 failures
+  const redirectMap = [];
+  const processedPaths = new Set();
+
+  const sensitiveExts = /\.(env|json|git|ssh|yaml|yml|php|conf|sql|bak|tfstate|axd|zshrc)$/i;
+  const sensitivePaths = /^\/(_ignition|api|server-status|health|z9x8c7v6b5|@fs|credentials)/i;
+
+  failedCrawls.forEach(l => {
+    const isGenuineGooglebot = l.ip.startsWith('66.249.');
+    const isMaliciousScan = sensitiveExts.test(l.path) || sensitivePaths.test(l.path);
+
+    if (isGenuineGooglebot && l.status === 404 && !isMaliciousScan && !processedPaths.has(l.path) && !l.path.startsWith('/_next') && !l.path.endsWith('.js') && !l.path.endsWith('.css')) {
+      processedPaths.add(l.path);
+      
+      // Smart parent category extraction for 301 target (e.g., /undergraduate-programs/ba-economics/... -> /undergraduate-programs/ba-economics)
+      const pathSegments = l.path.split('/').filter(Boolean);
+      let targetRedirect = '/';
+      if (pathSegments.length >= 2) {
+        targetRedirect = `/${pathSegments[0]}/${pathSegments[1]}`;
+      } else if (pathSegments.length === 1) {
+        targetRedirect = `/${pathSegments[0]}`;
+      }
+
+      redirectMap.push(`rewrite ^${l.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$ ${targetRedirect} permanent;`);
+    }
+  });
+
+
+
   res.json({
     total_google_crawls: googleLogs.length,
     failed_google_crawls_count: failedCrawls.length,
     top_crawled_paths: topPaths,
+    generated_nginx_redirects_snippet: redirectMap.length > 0 
+      ? `# Nginx 301 Permanent SEO Redirect Map for Googlebot 404 Errors\n# Generated automatically from active log analysis\n\n` + redirectMap.slice(0, 50).join('\n')
+      : '# No 404 Googlebot crawl errors detected',
     recent_failed_crawls: failedCrawls.slice(-50).reverse()
   });
 });
+
 
 // 3. Status Code Matrix
 router.get('/status-matrix', (req, res) => {
