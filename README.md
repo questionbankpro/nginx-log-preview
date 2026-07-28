@@ -45,23 +45,31 @@ graph TD
 ```text
 nginx/
 ├── models/
-│   └── logStore.js            # Shared In-Memory Log Store & Gunzip Parser Engine
+│   ├── logStore.js            # Shared In-Memory Log Store & Gunzip Parser Engine
+│   └── geoIpService.js        # IP Subnet & Resolver Helpers
 ├── routes/
 │   ├── summary.js             # Overview Stats & Paginated Log APIs (/api/summary, /api/logs)
-│   ├── analytics.js           # Bot Analytics, Googlebot Audits, 403 Threat Probes
-│   └── ipAudit.js             # Paginated Single IP Deep-Dive Audit (/api/ip-audit)
+│   ├── analytics.js           # Bot Analytics, Heatmaps, Crawl Budget, 5xx Audits
+│   ├── security.js            # LFI/RFI Probes, Spike Detectors & Fail2ban Generators
+│   ├── export.js              # CSV & JSON Log Exporter Endpoints
+│   └── ipAudit.js             # CIDR Subnet & Single IP Deep-Dive Audit (/api/ip-audit)
 ├── public/                    # Web Dashboard Frontend
-│   ├── index.html             # Single-Page Dashboard Layout & Multi-Tab Containers
-│   ├── style.css              # Dark Mode Design System & Badges
-│   └── app.js                 # URL Hash Router, LocalStorage Filters, Chart.js Integrations
+│   ├── partials/              # Modular UI Components
+│   │   ├── sidebar.html       # Collapsible Sidebar Navigation Component
+│   │   ├── filter-bar.html    # Presets & Exporter Control Bar Component
+│   │   └── metrics-header.html# Real-time Metrics Summary Cards Component
+│   ├── index.html             # Single-Page App Entry Point
+│   ├── style.css              # Dark Mode Design System & Bootstrap Overrides
+│   └── app.js                 # URL Hash Router, LocalStorage Filters, Chart.js & Partials Loader
 ├── logs/                      # Raw Nginx Log Files (*.log, *.gz)
 ├── server.js                  # Express Entry Point & Modular Route Mounting
 ├── Dockerfile                 # Node.js Container Definition
-├── docker-compose.yml         # Multi-Volume Docker Development Setup
-├── nginx_redirects.conf       # SEO 301 Permanent Redirect Configuration Template
-├── fail2ban_nginx_scanners.conf # Fail2ban Security Jail & Filter Rules Template
+├── docker-compose.yml         # Multi-Volume Docker Setup
+├── nginx_redirects.conf       # SEO 301 Permanent Redirect Template
+├── fail2ban_nginx_scanners.conf # Fail2ban Security Jail & Filter Template
 └── README.md
 ```
+
 
 ---
 

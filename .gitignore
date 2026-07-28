@@ -12,3 +12,5 @@ logs/*.log.*
 # Keep logs directory structure in repo
 !logs/README.md
 !logs/.gitkeep
+
+TODO.md

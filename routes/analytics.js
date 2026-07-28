@@ -165,4 +165,81 @@ router.get('/access-denied', (req, res) => {
   });
 });
 
+// 6. Hourly Traffic & Error Heatmap (24-Hour Breakdown)
+router.get('/heatmap', (req, res) => {
+  const { startDate, endDate, statuses } = req.query;
+  const filtered = applyDateFilter(logsDB, startDate, endDate, statuses);
+  
+  const hours = Array.from({ length: 24 }, (_, i) => ({
+    hour: `${String(i).padStart(2, '0')}:00`,
+    total: 0,
+    errors: 0,
+    success: 0
+  }));
+
+  filtered.forEach(l => {
+    if (l.iso_time) {
+      const match = l.iso_time.match(/\s(\d{2}):/);
+      if (match) {
+        const h = parseInt(match[1], 10);
+        if (hours[h]) {
+          hours[h].total++;
+          if (l.status >= 400) hours[h].errors++;
+          else hours[h].success++;
+        }
+      }
+    }
+  });
+
+  res.json(hours);
+});
+
+// 7. Bandwidth Hog / Heavy Payload Audit
+router.get('/bandwidth-hogs', (req, res) => {
+  const { startDate, endDate, statuses } = req.query;
+  const filtered = applyDateFilter(logsDB, startDate, endDate, statuses);
+  
+  const pathBytes = {};
+  filtered.forEach(l => {
+    if (!pathBytes[l.path]) {
+      pathBytes[l.path] = { path: l.path, total_bytes: 0, count: 0 };
+    }
+    pathBytes[l.path].total_bytes += (l.size || 0);
+    pathBytes[l.path].count++;
+  });
+
+  const sorted = Object.values(pathBytes)
+    .map(p => ({
+      path: p.path,
+      count: p.count,
+      total_bytes: p.total_bytes,
+      total_mb: (p.total_bytes / (1024 * 1024)).toFixed(2)
+    }))
+    .sort((a, b) => b.total_bytes - a.total_bytes)
+    .slice(0, 30);
+
+  res.json(sorted);
+});
+
+// 8. Googlebot Crawl Budget Allocation (HTML vs JS vs CSS vs Images)
+router.get('/crawl-budget', (req, res) => {
+  const { startDate, endDate, statuses } = req.query;
+  const filtered = applyDateFilter(logsDB, startDate, endDate, statuses);
+  const googleLogs = filtered.filter(l => l.bot_category.includes('Google'));
+
+  const breakdown = { HTML: 0, JS: 0, CSS: 0, Images: 0, Other: 0 };
+
+  googleLogs.forEach(l => {
+    const p = l.path.toLowerCase();
+    if (p.endsWith('.js')) breakdown.JS++;
+    else if (p.endsWith('.css')) breakdown.CSS++;
+    else if (p.endsWith('.png') || p.endsWith('.jpg') || p.endsWith('.webp') || p.endsWith('.svg') || p.endsWith('.ico')) breakdown.Images++;
+    else if (!p.includes('.') || p.endsWith('.html') || p.endsWith('.htm')) breakdown.HTML++;
+    else breakdown.Other++;
+  });
+
+  res.json(breakdown);
+});
+
 module.exports = router;
+

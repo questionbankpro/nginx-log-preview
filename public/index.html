@@ -14,117 +14,17 @@
 
 <body>
   <div class="app-container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo-icon">⚡</div>
-        <h2 class="brand-title">Nginx Insights</h2>
-        <button id="btn-toggle-sidebar" class="btn btn-sm btn-secondary ms-auto" title="Collapse Sidebar">
-          <span class="toggle-icon">◀</span>
-        </button>
-      </div>
-      <nav class="nav-menu">
-
-        <button class="nav-btn active text-nowrap" data-tab="overview">
-          <span class="icon me-1">📊</span> <span class="nav-text">Overview</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="crawlers">
-          <span class="icon me-1">🤖</span> <span class="nav-text">Bot & Crawler Traffic</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="googlebot">
-          <span class="icon me-1">🔍</span> <span class="nav-text">Googlebot Failures</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="ip-analytics">
-          <span class="icon me-1">🌐</span> <span class="nav-text">IP Aggregation</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="status-matrix">
-          <span class="icon me-1">📈</span> <span class="nav-text">Status Code Matrix</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="access-denied">
-          <span class="icon me-1">🛡️</span> <span class="nav-text">Access Denied (403/Scans)</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="ip-audit">
-          <span class="icon me-1">🔎</span> <span class="nav-text">IP Deep-Dive Lookup</span>
-        </button>
-        <button class="nav-btn text-nowrap" data-tab="log-viewer">
-          <span class="icon me-1">📋</span> <span class="nav-text">Raw Log Search</span>
-        </button>
-
-
-
-      </nav>
-    </aside>
+    <!-- Sidebar Partial -->
+    <div id="partial-sidebar"></div>
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Global Date & Status Range Filter Bar (Bootstrap Flex & Gap Utilities) -->
-      <div class="card p-3 mb-4 border-secondary-subtle">
-        <div class="d-flex flex-wrap align-items-center gap-3">
-          <div class="d-flex align-items-center gap-2">
-            <label for="global-start-date" class="form-label mb-0 fw-semibold">📅 Start:</label>
-            <input type="datetime-local" id="global-start-date" class="form-control form-control-sm w-auto">
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <label for="global-end-date" class="form-label mb-0 fw-semibold">📅 End:</label>
-            <input type="datetime-local" id="global-end-date" class="form-control form-control-sm w-auto">
-          </div>
+      <!-- Filter Bar Partial -->
+      <div id="partial-filter-bar"></div>
 
-          <div class="d-flex align-items-center flex-wrap gap-2">
-            <span class="fw-semibold">Statuses:</span>
-            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="2xx" id="cb2" checked><label class="form-check-label" for="cb2">2xx</label></div>
-            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="3xx" id="cb3" checked><label class="form-check-label" for="cb3">3xx</label></div>
-            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="403" id="cb403" checked><label class="form-check-label text-warning" for="cb403">403</label></div>
-            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="404" id="cb404" checked><label class="form-check-label text-warning" for="cb404">404</label></div>
-            <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="5xx" id="cb5" checked><label class="form-check-label text-danger" for="cb5">5xx</label></div>
-          </div>
+      <!-- Metrics Header Partial -->
+      <div id="partial-metrics-header"></div>
 
-          <div class="d-flex gap-2 ms-lg-auto">
-            <button id="btn-apply-global-date" class="btn btn-primary btn-sm">Apply Filter</button>
-            <button id="btn-clear-global-date" class="btn btn-outline-secondary btn-sm">Clear</button>
-            <button id="btn-copy-api-url" class="btn btn-outline-info btn-sm">📋 Copy API URL</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top Summary Metrics Grid (Bootstrap 5 Row & Cols) -->
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-secondary-subtle">
-            <div class="text-secondary small fw-medium">Total Log Entries</div>
-            <div class="fs-4 fw-bold mt-1" id="stat-total-logs">-</div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-secondary-subtle">
-            <div class="text-secondary small fw-medium">Unique Client IPs</div>
-            <div class="fs-4 fw-bold mt-1" id="stat-unique-ips">-</div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-info-subtle bg-info-subtle bg-opacity-10">
-            <div class="text-info small fw-medium">Googlebot Hits</div>
-            <div class="fs-4 fw-bold mt-1 text-info" id="stat-googlebot">-</div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-danger-subtle bg-danger-subtle bg-opacity-10">
-            <div class="text-danger small fw-medium">Googlebot Failed</div>
-            <div class="fs-4 fw-bold mt-1 text-danger" id="stat-googlebot-failed">-</div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-warning-subtle bg-warning-subtle bg-opacity-10">
-            <div class="text-warning small fw-medium">Access Denied / 403s</div>
-            <div class="fs-4 fw-bold mt-1 text-warning" id="stat-403">-</div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-2">
-          <div class="card p-3 h-100 text-center border-secondary-subtle">
-            <div class="text-secondary small fw-medium">Total Bandwidth</div>
-            <div class="fs-4 fw-bold mt-1" id="stat-bandwidth">-</div>
-          </div>
-        </div>
-      </div>
 
       <!-- TAB 1: OVERVIEW -->
       <section id="tab-overview" class="tab-content active">
@@ -204,6 +104,50 @@
           </div>
         </div>
       </section>
+
+      <!-- TAB: THREAT SCANS & FAIL2BAN RULES -->
+      <section id="tab-security" class="tab-content">
+        <div class="row g-4 mb-4">
+          <div class="col-12 col-lg-6">
+            <div class="card p-3 border-danger-subtle h-100">
+              <h5 class="text-danger mb-2">🚨 Detected Malicious Probes & Attacks</h5>
+              <div id="threat-categories-list" class="d-flex flex-column gap-2 mt-2"></div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card p-3 border-warning-subtle h-100">
+              <h5 class="text-warning mb-2">🛡️ Generated Security Rules</h5>
+              <div class="mb-2">
+                <small class="fw-semibold">Nginx Deny Directives:</small>
+                <textarea id="snippet-nginx-deny" class="form-control code-font bg-dark text-light mt-1" rows="3" readonly></textarea>
+              </div>
+              <div>
+                <small class="fw-semibold">Fail2ban Filter Snippet:</small>
+                <textarea id="snippet-fail2ban" class="form-control code-font bg-dark text-light mt-1" rows="3" readonly></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-3 border-secondary-subtle">
+          <h5 class="mb-3">Recent Suspicious Threat Events</h5>
+          <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+            <table class="data-table code-font">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Client IP</th>
+                  <th>Path</th>
+                  <th>Status</th>
+                  <th>User-Agent</th>
+                </tr>
+              </thead>
+              <tbody id="threats-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
 
       <!-- TAB 4: IP AGGREGATION & DRILL-DOWN -->
       <section id="tab-ip-analytics" class="tab-content">

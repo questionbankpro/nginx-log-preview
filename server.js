@@ -13,9 +13,12 @@ app.use(express.json());
 // Feature Modular Routes
 app.use('/api', require('./routes/summary'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/security', require('./routes/security'));
+app.use('/api/export', require('./routes/export'));
 app.use('/api/ip-audit', require('./routes/ipAudit'));
 
 // Start Server
+
 loadLogs(LOG_DIR).then(() => {
   app.listen(PORT, () => {
     console.log(`Nginx Advanced Log Analyzer running at http://localhost:${PORT}`);

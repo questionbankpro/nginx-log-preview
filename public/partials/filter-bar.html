@@ -1,0 +1,37 @@
+<!-- Partial: Global Filter Bar -->
+<div class="card p-3 mb-4 border-secondary-subtle">
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <!-- Quick Presets -->
+    <div class="btn-group btn-group-sm mb-1" role="group">
+      <button class="btn btn-outline-secondary btn-preset" data-preset="1h">1H</button>
+      <button class="btn btn-outline-secondary btn-preset" data-preset="24h">24H</button>
+      <button class="btn btn-outline-secondary btn-preset" data-preset="7d">7D</button>
+      <button class="btn btn-outline-secondary btn-preset" data-preset="all">All</button>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <label for="global-start-date" class="form-label mb-0 fw-semibold">📅 Start:</label>
+      <input type="datetime-local" id="global-start-date" class="form-control form-control-sm w-auto">
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <label for="global-end-date" class="form-label mb-0 fw-semibold">📅 End:</label>
+      <input type="datetime-local" id="global-end-date" class="form-control form-control-sm w-auto">
+    </div>
+
+    <div class="d-flex align-items-center flex-wrap gap-2">
+      <span class="fw-semibold">Statuses:</span>
+      <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="2xx" id="cb2" checked><label class="form-check-label" for="cb2">2xx</label></div>
+      <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="3xx" id="cb3" checked><label class="form-check-label" for="cb3">3xx</label></div>
+      <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="403" id="cb403" checked><label class="form-check-label text-warning" for="cb403">403</label></div>
+      <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="404" id="cb404" checked><label class="form-check-label text-warning" for="cb404">404</label></div>
+      <div class="form-check form-check-inline mb-0"><input type="checkbox" class="form-check-input status-cb" value="5xx" id="cb5" checked><label class="form-check-label text-danger" for="cb5">5xx</label></div>
+    </div>
+
+    <div class="d-flex gap-2 ms-lg-auto">
+      <button id="btn-clear-global-date" class="btn btn-outline-secondary btn-sm">Reset</button>
+      <button id="btn-export-csv" class="btn btn-outline-success btn-sm">📥 Export CSV</button>
+      <button id="btn-export-json" class="btn btn-outline-warning btn-sm">📥 Export JSON</button>
+      <button id="btn-copy-api-url" class="btn btn-outline-info btn-sm">📋 Copy API</button>
+    </div>
+  </div>
+</div>

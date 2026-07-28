@@ -26,7 +26,25 @@ function getSelectedCheckboxes() {
 let auditCurrentPage = 1;
 let currentAuditedIp = '';
 
-document.addEventListener('DOMContentLoaded', () => {
+async function loadPartials() {
+  try {
+    const [sidebarRes, filterRes, metricsRes] = await Promise.all([
+      fetch('/partials/sidebar.html'),
+      fetch('/partials/filter-bar.html'),
+      fetch('/partials/metrics-header.html')
+    ]);
+
+    document.getElementById('partial-sidebar').outerHTML = await sidebarRes.text();
+    document.getElementById('partial-filter-bar').outerHTML = await filterRes.text();
+    document.getElementById('partial-metrics-header').outerHTML = await metricsRes.text();
+  } catch (err) {
+    console.error('Error loading partials', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadPartials();
+
   setupTabNavigation();
   setupGlobalDateFilter();
 
@@ -34,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.querySelector('.sidebar');
   const toggleBtn = document.getElementById('btn-toggle-sidebar');
   const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+
 
   if (isCollapsed && sidebar) {
     sidebar.classList.add('collapsed');
@@ -188,10 +207,55 @@ function refreshAllData() {
   loadOverviewCharts();
   loadBotsTab();
   loadGooglebotTab();
+  loadSecurityTab();
   loadIPAnalytics();
   loadStatusMatrixTab();
   loadAccessDeniedTab();
   loadLogs();
+}
+
+async function loadSecurityTab() {
+  try {
+    const q = getGlobalDateQueryParams();
+    const [threatRes, rulesRes] = await Promise.all([
+      fetch(`/api/security/threats?${q}`),
+      fetch(`/api/security/rules-generator?${q}`)
+    ]);
+
+    const threatData = await threatRes.json();
+    const rulesData = await rulesRes.json();
+
+    const catContainer = document.getElementById('threat-categories-list');
+    catContainer.innerHTML = '';
+    (threatData.threat_categories || []).forEach(tc => {
+      const item = document.createElement('div');
+      item.className = 'd-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary-subtle';
+      item.innerHTML = `
+        <span><strong>${tc.name}</strong> (${tc.unique_ips_count} IPs)</span>
+        <span class="badge bg-danger">${tc.count} Hits</span>
+      `;
+      catContainer.appendChild(item);
+    });
+
+    document.getElementById('snippet-nginx-deny').value = rulesData.nginx_deny_snippet || '';
+    document.getElementById('snippet-fail2ban').value = rulesData.fail2ban_filter_snippet || '';
+
+    const tbody = document.getElementById('threats-table-body');
+    tbody.innerHTML = '';
+    (threatData.recent_threat_events || []).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="white-space: nowrap;">${r.timestamp}</td>
+        <td><code>${r.ip}</code></td>
+        <td style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(r.path)}"><code>${escapeHtml(r.path)}</code></td>
+        <td><span class="badge ${r.status >= 400 ? 'badge-danger' : 'badge-success'}">${r.status}</span></td>
+        <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.user_agent)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error('Error loading Security Tab', err);
+  }
 }
 
 function setupGlobalDateFilter() {
@@ -206,13 +270,60 @@ function setupGlobalDateFilter() {
   document.querySelectorAll('.status-cb').forEach(cb => {
     cb.checked = globalStatuses.includes(cb.value);
 
-    // Auto-save & reload on checkbox toggle
     cb.addEventListener('change', () => {
       globalStatuses = getSelectedCheckboxes();
       localStorage.setItem('nginx_statuses', JSON.stringify(globalStatuses));
       currentPage = 1;
       refreshAllData();
     });
+  });
+
+  // Quick Date Presets Handler
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-preset');
+      const now = new Date();
+      let start = new Date();
+
+      if (preset === '1h') start.setHours(now.getHours() - 1);
+      else if (preset === '24h') start.setHours(now.getHours() - 24);
+      else if (preset === '7d') start.setDate(now.getDate() - 7);
+      else if (preset === 'all') {
+        globalStartDate = '';
+        globalEndDate = '';
+        startInput.value = '';
+        endInput.value = '';
+        localStorage.removeItem('nginx_start_date');
+        localStorage.removeItem('nginx_end_date');
+        currentPage = 1;
+        refreshAllData();
+        return;
+      }
+
+      const toIsoLocal = (d) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      globalStartDate = toIsoLocal(start);
+      globalEndDate = toIsoLocal(now);
+
+      startInput.value = globalStartDate;
+      endInput.value = globalEndDate;
+
+      localStorage.setItem('nginx_start_date', globalStartDate);
+      localStorage.setItem('nginx_end_date', globalEndDate);
+
+      currentPage = 1;
+      refreshAllData();
+    });
+  });
+
+  // Export CSV & JSON Handlers
+  document.getElementById('btn-export-csv').addEventListener('click', () => {
+    const q = getGlobalDateQueryParams();
+    window.location.href = `/api/export/csv?${q}`;
+  });
+
+  document.getElementById('btn-export-json').addEventListener('click', () => {
+    const q = getGlobalDateQueryParams();
+    window.location.href = `/api/export/json?${q}`;
   });
 
   // Auto-save on date change
@@ -226,19 +337,6 @@ function setupGlobalDateFilter() {
   endInput.addEventListener('change', () => {
     globalEndDate = endInput.value;
     localStorage.setItem('nginx_end_date', globalEndDate);
-    currentPage = 1;
-    refreshAllData();
-  });
-
-  document.getElementById('btn-apply-global-date').addEventListener('click', () => {
-    globalStartDate = startInput.value;
-    globalEndDate = endInput.value;
-    globalStatuses = getSelectedCheckboxes();
-
-    localStorage.setItem('nginx_start_date', globalStartDate);
-    localStorage.setItem('nginx_end_date', globalEndDate);
-    localStorage.setItem('nginx_statuses', JSON.stringify(globalStatuses));
-
     currentPage = 1;
     refreshAllData();
   });
@@ -259,6 +357,7 @@ function setupGlobalDateFilter() {
     currentPage = 1;
     refreshAllData();
   });
+
 
 
   document.getElementById('btn-copy-api-url').addEventListener('click', () => {
