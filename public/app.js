@@ -317,7 +317,33 @@ function setupGlobalDateFilter() {
     });
   });
 
+  // Auto-Refresh Live Polling Handler
+  let pollingInterval = null;
+  const refreshSelect = document.getElementById('select-auto-refresh');
+  
+  function startPolling() {
+    if (pollingInterval) clearInterval(pollingInterval);
+    const sec = refreshSelect ? refreshSelect.value : '5';
+    if (sec !== 'off') {
+      const ms = parseInt(sec, 10) * 1000;
+      pollingInterval = setInterval(() => {
+        refreshAllData();
+      }, ms);
+    }
+  }
+
+  if (refreshSelect) {
+    refreshSelect.addEventListener('change', () => {
+      localStorage.setItem('nginx_auto_refresh', refreshSelect.value);
+      startPolling();
+    });
+    const savedSec = localStorage.getItem('nginx_auto_refresh') || '5';
+    refreshSelect.value = savedSec;
+  }
+  startPolling();
+
   // Export CSV & JSON Handlers
+
   document.getElementById('btn-export-csv').addEventListener('click', () => {
     const q = getGlobalDateQueryParams();
     window.location.href = `/api/export/csv?${q}`;

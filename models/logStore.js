@@ -104,6 +104,8 @@ function parseLogDate(dateStr) {
   return dateStr;
 }
 
+const filePositions = {};
+
 async function loadLogs(logDir) {
   const targetDir = fs.existsSync(logDir) ? logDir : path.join(__dirname, '..');
   
@@ -116,40 +118,85 @@ async function loadLogs(logDir) {
   const logFiles = files.filter(f => f.startsWith('access.log') || f.startsWith('error.log'));
 
   if (logFiles.length === 0) {
-    console.log(`⚠️ No access.log or error.log files found in ${targetDir}. Please add your Nginx log files to this folder.`);
+    console.log(`⚠️ No access.log or error.log files found in ${targetDir}.`);
     logsDB.length = 0;
     return;
   }
 
   console.log(`Loading ${logFiles.length} log files from ${targetDir}...`);
   logsDB.length = 0; // reset
-
+  Object.keys(filePositions).forEach(key => delete filePositions[key]);
 
   for (const file of logFiles) {
-    const filePath = path.join(targetDir, file);
-    const isGz = file.endsWith('.gz');
-    const isErrorLog = file.startsWith('error.log');
-
-    let stream = fs.createReadStream(filePath);
-    if (isGz) stream = stream.pipe(zlib.createGunzip());
-
-    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
-
-    for await (const line of rl) {
-      if (!line.trim()) continue;
-      let parsed = isErrorLog ? parseErrorLogLine(line, file) : parseAccessLogLine(line, file);
-      if (!parsed && !isErrorLog) {
-        parsed = {
-          id: logsDB.length + 1, log_type: 'access', ip: 'unknown', timestamp: '', iso_time: '',
-          method: 'GET', path: line, status: 200, size: 0, referrer: '', user_agent: '',
-          bot_category: 'Unknown', raw_message: line, source_file: file
-        };
-      }
-      if (parsed) logsDB.push(parsed);
-    }
+    await readLogFileIncremental(targetDir, file, false);
   }
   console.log(`Loaded ${logsDB.length} records into memory.`);
+
+  if (process.env.WATCH_LOGS === 'true' && !global.isLogWatcherActive) {
+    setupLiveLogWatcher(targetDir);
+  }
 }
+
+async function readLogFileIncremental(targetDir, file, isAppendOnly = false) {
+  const filePath = path.join(targetDir, file);
+  if (!fs.existsSync(filePath)) return;
+
+  const stat = fs.statSync(filePath);
+  const isGz = file.endsWith('.gz');
+  const isErrorLog = file.startsWith('error.log');
+  const startPos = isAppendOnly && filePositions[file] ? filePositions[file] : 0;
+
+  // Handle log truncation or rotation
+  if (stat.size < startPos) {
+    filePositions[file] = 0;
+  }
+
+  let streamOptions = {};
+  if (!isGz && isAppendOnly && startPos > 0) {
+    streamOptions.start = startPos;
+  }
+
+  let stream = fs.createReadStream(filePath, streamOptions);
+  if (isGz) stream = stream.pipe(zlib.createGunzip());
+
+  const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    let parsed = isErrorLog ? parseErrorLogLine(line, file) : parseAccessLogLine(line, file);
+    if (!parsed && !isErrorLog) {
+      parsed = {
+        id: logsDB.length + 1, log_type: 'access', ip: 'unknown', timestamp: '', iso_time: '',
+        method: 'GET', path: line, status: 200, size: 0, referrer: '', user_agent: '',
+        bot_category: 'Unknown', raw_message: line, source_file: file
+      };
+    }
+    if (parsed) logsDB.push(parsed);
+  }
+
+  if (!isGz) {
+    filePositions[file] = stat.size;
+  }
+}
+
+function setupLiveLogWatcher(targetDir) {
+  try {
+    global.isLogWatcherActive = true;
+    console.log(`👀 WATCH_LOGS enabled: Real-time incremental log tailing active on ${targetDir}`);
+    fs.watch(targetDir, { recursive: false }, (eventType, filename) => {
+      if (filename && (filename.startsWith('access.log') || filename.startsWith('error.log')) && !filename.endsWith('.gz')) {
+        // Incremental append in real-time (0ms delay, zero buffer lock)
+        readLogFileIncremental(targetDir, filename, true).catch(err => {
+          console.error(`Error tailing ${filename}:`, err);
+        });
+      }
+    });
+  } catch (err) {
+    console.error('Error setting up log watcher:', err);
+  }
+}
+
+
 
 function applyDateFilter(logs, startDate, endDate, statuses) {
   let result = logs;
