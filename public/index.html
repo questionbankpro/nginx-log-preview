@@ -116,7 +116,22 @@
           </div>
           <div class="col-12 col-lg-6">
             <div class="card p-3 border-warning-subtle h-100">
-              <h5 class="text-warning mb-2">🛡️ Generated Security Rules</h5>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="text-warning mb-0">🛡️ Generated Security Rules</h5>
+                <div class="dropdown">
+                  <button class="btn btn-warning btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    📥 Download Config Files
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-menu-item dropdown-item" href="/api/security/download/nginx-block" download>📄 nginx_block_scanners.conf</a></li>
+                    <li><a class="dropdown-menu-item dropdown-item" href="/api/security/download/fail2ban-filter" download>📄 nginx-scanners.conf (Fail2ban Filter)</a></li>
+                    <li><a class="dropdown-menu-item dropdown-item" href="/api/security/download/fail2ban-jail" download>📄 nginx-scanners.local (Fail2ban Jail)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-menu-item dropdown-item fw-bold text-info" href="/api/security/download/setup-guide" download>📖 SECURITY_SETUP_GUIDE.md</a></li>
+                  </ul>
+                </div>
+              </div>
+
               <div class="mb-2">
                 <small class="fw-semibold">Nginx Deny Directives:</small>
                 <textarea id="snippet-nginx-deny" class="form-control code-font bg-dark text-light mt-1" rows="3" readonly></textarea>
@@ -127,6 +142,7 @@
               </div>
             </div>
           </div>
+
         </div>
 
         <div class="card p-3 border-secondary-subtle">
