@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nginx Log Analytics & Crawler Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5 CDN for responsive layout & grid -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <h2 class="brand-title">Nginx Insights</h2>
+        <button id="btn-toggle-sidebar" class="btn btn-sm btn-secondary ms-auto" title="Collapse Sidebar">
+          <span class="toggle-icon">◀</span>
+        </button>
+      </div>
+      <nav class="nav-menu">
+
+        <button class="nav-btn active" data-tab="overview">
+          <span class="icon">📊</span> Overview
+        </button>
+        <button class="nav-btn" data-tab="crawlers">
+          <span class="icon">🤖</span> Bot & Crawler Traffic
+        </button>
+        <button class="nav-btn" data-tab="googlebot">
+          <span class="icon">🔍</span> Googlebot Failures
+        </button>
+        <button class="nav-btn" data-tab="ip-analytics">
+          <span class="icon">🌐</span> IP Aggregation
+        </button>
+        <button class="nav-btn" data-tab="status-matrix">
+          <span class="icon">📈</span> Status Code Matrix
+        </button>
+        <button class="nav-btn" data-tab="access-denied">
+          <span class="icon">🛡️</span> Access Denied (403/Scans)
+        </button>
+        <button class="nav-btn" data-tab="ip-audit">
+          <span class="icon">🔎</span> IP Deep-Dive Lookup
+        </button>
+        <button class="nav-btn" data-tab="log-viewer">
+          <span class="icon">📋</span> Raw Log Search
+        </button>
+
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Global Date & Status Range Filter Bar -->
+      <div class="global-filter-bar">
+        <div class="filter-group">
+          <label for="global-start-date">📅 Start Date:</label>
+          <input type="datetime-local" id="global-start-date" class="date-input">
+        </div>
+        <div class="filter-group">
+          <label for="global-end-date">📅 End Date:</label>
+          <input type="datetime-local" id="global-end-date" class="date-input">
+        </div>
+
+        <div class="filter-group checkboxes-group">
+          <span style="font-weight: 600; color: var(--text-main);">Statuses:</span>
+          <label class="cb-label"><input type="checkbox" class="status-cb" value="2xx" checked> 2xx OK</label>
+          <label class="cb-label"><input type="checkbox" class="status-cb" value="3xx" checked> 3xx Redirect</label>
+          <label class="cb-label"><input type="checkbox" class="status-cb" value="403" checked> 403 Forbidden</label>
+          <label class="cb-label"><input type="checkbox" class="status-cb" value="404" checked> 404 Not Found</label>
+          <label class="cb-label"><input type="checkbox" class="status-cb" value="5xx" checked> 5xx Error</label>
+        </div>
+
+        <button id="btn-apply-global-date" class="btn btn-primary btn-sm">Apply Global Filter</button>
+        <button id="btn-clear-global-date" class="btn btn-secondary btn-sm">Clear Filter</button>
+        <button id="btn-copy-api-url" class="btn btn-secondary btn-sm" style="margin-left: auto;">📋 Copy API URL</button>
+      </div>
+
+
+
+      <!-- Top Summary Metrics Bar -->
+      <header class="metrics-bar">
+
+        <div class="metric-card">
+          <div class="metric-title">Total Log Entries</div>
+          <div class="metric-value" id="stat-total-logs">-</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Unique Client IPs</div>
+          <div class="metric-value" id="stat-unique-ips">-</div>
+        </div>
+        <div class="metric-card info">
+          <div class="metric-title">Googlebot Hits</div>
+          <div class="metric-value" id="stat-googlebot">-</div>
+        </div>
+        <div class="metric-card danger">
+          <div class="metric-title">Googlebot Failed Crawls</div>
+          <div class="metric-value" id="stat-googlebot-failed">-</div>
+        </div>
+        <div class="metric-card warning">
+          <div class="metric-title">Access Denied / 403s</div>
+          <div class="metric-value" id="stat-403">-</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Total Bandwidth</div>
+          <div class="metric-value" id="stat-bandwidth">-</div>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-content active">
+        <div class="grid-2">
+          <div class="card">
+            <h3>HTTP Status Code Distribution</h3>
+            <div class="chart-container">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Bot vs Human / Tool Traffic Breakdown</h3>
+            <div class="chart-container">
+              <canvas id="botChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CRAWLER & BOT TRAFFIC -->
+      <section id="tab-crawlers" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3>🤖 Search Engine Crawlers & Bot Traffic Breakdown</h3>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Bot / User-Agent Category</th>
+                  <th>Total Requests</th>
+                  <th>Success (2xx)</th>
+                  <th>Redirects (3xx)</th>
+                  <th>Errors (4xx/5xx)</th>
+                  <th>Forbidden (403)</th>
+                  <th>Bandwidth Used</th>
+                </tr>
+              </thead>
+              <tbody id="bot-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: GOOGLEBOT FAILS & CRAWL ANALYTICS -->
+      <section id="tab-googlebot" class="tab-content">
+        <div class="card border-warning">
+          <div class="card-header">
+            <h3>🔍 Googlebot Crawl Failures & Aggregated Paths</h3>
+            <span class="badge badge-warning" id="google-fail-badge">0 Failed Crawls</span>
+          </div>
+          <p class="subtitle">Detailed breakdown of requests originated from Googlebot user-agents that returned error status codes (4xx/5xx).</p>
+          
+          <h4 style="margin-top: 1rem;">Recent Googlebot Failed Crawl Attempts</h4>
+          <div class="table-wrapper">
+            <table class="data-table code-font">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Googlebot IP</th>
+                  <th>Target Path</th>
+                  <th>Status Code</th>
+                  <th>Raw Log Event</th>
+                </tr>
+              </thead>
+              <tbody id="google-failed-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: IP AGGREGATION & DRILL-DOWN -->
+      <section id="tab-ip-analytics" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3>🌐 Top Active IP Aggregations</h3>
+            <input type="text" id="ip-filter-input" placeholder="Filter IPs..." class="search-input">
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="ip-table">
+              <thead>
+                <tr>
+                  <th>IP Address</th>
+                  <th>Total Requests</th>
+                  <th>Error Requests</th>
+                  <th>Error Rate</th>
+                  <th>Last Active</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ip-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: STATUS CODE MATRIX -->
+      <section id="tab-status-matrix" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3>📈 HTTP Status Code Matrix & Sample Endpoints</h3>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table code-font">
+              <thead>
+                <tr>
+                  <th>HTTP Code</th>
+                  <th>Total Occurrences</th>
+                  <th>Percentage of Traffic</th>
+                  <th>Sample Targeted Paths</th>
+                </tr>
+              </thead>
+              <tbody id="status-matrix-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: ACCESS DENIED & THREATS -->
+      <section id="tab-access-denied" class="tab-content">
+        <div class="card border-danger">
+          <div class="card-header">
+            <h3>🛡️ Access Denied (403 Forbidden) & Malicious Vulnerability Scans</h3>
+          </div>
+          <div class="grid-2" style="margin-bottom: 1rem;">
+            <div>
+              <h4>Top Offending IPs (403 Probes)</h4>
+              <div class="table-wrapper">
+                <table class="data-table code-font">
+                  <thead>
+                    <tr>
+                      <th>Offender IP</th>
+                      <th>403 Probes</th>
+                      <th>Targeted Sample Paths</th>
+                    </tr>
+                  </thead>
+                  <tbody id="top-offenders-body">
+                    <!-- Dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h4>Recent Denied Events Log</h4>
+              <div class="table-wrapper">
+                <table class="data-table code-font">
+                  <thead>
+                    <tr>
+                      <th>IP</th>
+                      <th>Path</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-denied-body">
+                    <!-- Dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6.5: IP DEEP-DIVE LOOKUP -->
+      <section id="tab-ip-audit" class="tab-content">
+        <div class="card border-warning">
+          <div class="card-header">
+            <h3>🔎 Single IP Deep-Dive Audit & Log Analysis</h3>
+          </div>
+          <div class="filter-controls">
+            <input type="text" id="ip-audit-input" placeholder="Enter IP address to audit (e.g. 185.191.171.16 or 185.213.175.121)..." class="search-input flex-2">
+            <button id="btn-ip-audit-search" class="btn btn-primary">Audit IP</button>
+          </div>
+
+          <div id="ip-audit-results" style="display: none; margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="grid-2">
+              <div class="card">
+                <h4>IP Summary & User-Agents</h4>
+                <p><strong>Searched IP:</strong> <span id="audit-ip-val" class="text-danger"></span></p>
+                <p><strong>Matched Requests:</strong> <span id="audit-count-val"></span></p>
+                <p><strong>Bot Category:</strong> <span id="audit-bot-val" class="badge badge-info"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>User-Agent String(s):</strong></p>
+                <code id="audit-ua-val" style="display: block; background: #0f172a; padding: 0.5rem; border-radius: 6px; font-size: 0.8rem; word-break: break-all;"></code>
+              </div>
+              <div class="card">
+                <h4>HTTP Status Breakdown for IP</h4>
+                <div id="audit-status-counts" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Top Targeted Paths by this IP</h4>
+              <div class="table-wrapper">
+                <table class="data-table code-font">
+                  <thead>
+                    <tr>
+                      <th>Hit Count</th>
+                      <th>Target Path</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-paths-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h4>Recent Raw Logs from this IP</h4>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="text" id="audit-logs-search" placeholder="Search path within this IP..." class="search-input" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+                  <select id="audit-logs-limit" class="select-input" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+                    <option value="50">50 per page</option>
+                    <option value="100" selected>100 per page</option>
+                    <option value="250">250 per page</option>
+                    <option value="500">500 per page</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+                <table class="data-table code-font">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Method</th>
+                      <th>Path</th>
+                      <th>Status</th>
+                      <th>Source File</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-raw-body"></tbody>
+                </table>
+              </div>
+
+              <!-- IP Audit Pagination -->
+              <div class="pagination" style="margin-top: 0.75rem;">
+                <button id="audit-prev-page" class="btn btn-sm">Previous</button>
+                <span id="audit-page-indicator">Page 1 of 1</span>
+                <button id="audit-next-page" class="btn btn-sm">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- TAB 7: LIVE RAW LOG SEARCH -->
+
+      <section id="tab-log-viewer" class="tab-content">
+        <div class="card">
+          <div class="filter-controls">
+            <input type="text" id="search-query" placeholder="Search IP, Path, User-Agent or text..." class="search-input flex-2">
+            
+            <select id="status-filter" class="select-input">
+              <option value="">All Status Codes</option>
+              <option value="200">200 OK</option>
+              <option value="301">301 Moved Permanently</option>
+              <option value="403">403 Forbidden</option>
+              <option value="404">404 Not Found</option>
+              <option value="500">500 Server Error</option>
+            </select>
+
+            <select id="type-filter" class="select-input">
+              <option value="">All Log Types</option>
+              <option value="access">Access Logs</option>
+              <option value="error">Error Logs</option>
+            </select>
+
+            <button id="btn-search" class="btn btn-primary">Search</button>
+            <button id="btn-reset" class="btn btn-secondary">Reset</button>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table code-font">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>IP</th>
+                  <th>Timestamp</th>
+                  <th>Method</th>
+                  <th>Path / Request</th>
+                  <th>Bot Category</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="logs-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <button id="prev-page" class="btn btn-sm">Previous</button>
+            <span id="page-indicator">Page 1 of 1</span>
+            <button id="next-page" class="btn btn-sm">Next</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+

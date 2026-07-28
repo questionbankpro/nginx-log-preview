@@ -1,0 +1,13 @@
+{
+  "name": "nginx-log-analyzer",
+  "version": "1.0.0",
+  "description": "Nginx Log Analytics, IP Grouping and Search Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
+

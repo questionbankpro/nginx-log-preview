@@ -1,0 +1,18 @@
+services:
+  log-analyzer:
+    build: .
+    container_name: nginx_log_analyzer
+    ports:
+      - "3080:3000"
+    volumes:
+      # Mount logs directory to /logs container path
+      - ./logs:/logs:ro
+      # Hot reload code changes instantly
+      - ./server.js:/app/server.js
+      - ./models:/app/models
+      - ./routes:/app/routes
+      - ./public:/app/public
+    environment:
+      - PORT=3000
+      - LOG_DIR=/logs
+    restart: unless-stopped
